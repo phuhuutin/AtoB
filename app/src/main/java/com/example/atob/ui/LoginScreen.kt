@@ -20,6 +20,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -33,6 +34,7 @@ import com.example.atob.model.User
 import com.example.atob.ui.viewModel.LoginViewModel
 import com.example.compose.AtoBTheme
 import kotlinx.coroutines.launch
+import retrofit2.HttpException
 
 @Composable
 fun LoginScreen(loginViewModel: LoginViewModel) {
@@ -41,7 +43,7 @@ fun LoginScreen(loginViewModel: LoginViewModel) {
     var passwordVisible by remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()  // Create a coroutine scope for the composable
     var loggedInUser by remember { mutableStateOf<User?>(null) }  // State to store the returned User
-
+    var loginMessage by remember { mutableStateOf("") }  // State to display login messages
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -95,16 +97,33 @@ fun LoginScreen(loginViewModel: LoginViewModel) {
         Button(
             onClick = {
                 coroutineScope.launch {
-                    val user = loginViewModel.login(username, password)  // Call login
-                    if (user != null) {
-                        loggedInUser = user  // Store user if login is successful
+                        loginMessage = "";
+                    try {
+                        val user = loginViewModel.login(username, password)  // Call login
+                        if (user != null) {
+                            loggedInUser = user  // Store user if login is successful
+                        }
+                    } catch (e: Exception) {
+                        // Handle the 403 Forbidden case
+                        if (e is HttpException && e.code() == 403) {
+                            // Display a message or perform an action on 403 Forbidden response
+                            // Example: Show a Toast or set an error message state
+                            println("Login failed: 403 Forbidden")
+                            loginMessage = "Login failed: 403 Forbidden"
+                        } else {
+                            // Handle other types of errors
+                            println("Login failed: ${e.message}")
+                            loginMessage = "Login failed: 403 Forbidden"
+
+                        }
                     }
                 }
-            },
+                      },
             modifier = Modifier.fillMaxWidth()
         ) {
             Text("Login")
         }
+
 
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -113,6 +132,11 @@ fun LoginScreen(loginViewModel: LoginViewModel) {
             Text("Logged in as: ${user.username}")
             Text("Email: ${user.email}")
             Text("Role: ${user.role}")
+        }
+
+        // Display login message
+        if(!loginMessage.isEmpty()){
+            Text(loginMessage, color = Color.Red)
         }
     }
 }
