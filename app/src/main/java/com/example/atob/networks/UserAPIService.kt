@@ -1,11 +1,9 @@
 package com.example.atob.networks
 
-import com.example.atob.data.UserRepository
 import com.example.atob.model.LoginRequest
 import com.example.atob.model.SignUpRequest
 import com.example.atob.model.User
 import retrofit2.http.*
-import kotlinx.coroutines.Deferred
 
 interface UserApiService  {
     @GET("api/user")
