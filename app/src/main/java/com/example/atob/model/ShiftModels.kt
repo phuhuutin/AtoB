@@ -1,10 +1,8 @@
 package com.example.atob.model
 
 import android.annotation.SuppressLint
-import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.Serializer
 import kotlinx.serialization.descriptors.PrimitiveKind
 import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
 import kotlinx.serialization.descriptors.SerialDescriptor
@@ -16,7 +14,21 @@ import java.time.format.DateTimeFormatter
 import java.util.UUID
 
 @Serializable
-data class Shift(
+data class UserShift(
+    val id: Long = 0L,
+    @Serializable(with = DateSerializer::class)
+    val date: LocalDate,  // The date of the shift
+    @Serializable(with = LocalDateTimeSerializer::class)
+    var startTime: LocalDateTime,
+    val username: String,
+    @Serializable(with = LocalDateTimeSerializer::class)
+    var endTime: LocalDateTime,
+    val clock: ClockInOutRecord? = null,
+    val employer: Employer
+)
+
+@Serializable
+data class FindShift(
     val id: Long = 0L,
     @Serializable(with = DateSerializer::class)
     val date: LocalDate,  // The date of the shift
@@ -24,26 +36,46 @@ data class Shift(
     val startTime: LocalDateTime,
     @Serializable(with = LocalDateTimeSerializer::class)
     val endTime: LocalDateTime,
-    val workerLimit: Int,  // Maximum number of employees who can pick the shift
-    var currentWorkers: Int = 0,  // Track how many employees have picked the shift
-    val employees: MutableList<User> = mutableListOf(),  // Employees who picked this shift
-    val postedBy: User,  // Manager who posted the shift
-    @Serializable(with = UUIDSerializer::class)
-    val jobId: UUID,  // Unique job ID
-    val shiftFull: Boolean
+    val shiftFull: Boolean,
+    val employees: Set<User> = emptySet(),
+    val workerLimit: Int,
+    val currentWorkers: Int,
+    val postedBy: User,
+    val employer: Employer
+
+){
+    fun toUserShift(username: String): UserShift {
+        return UserShift(
+            id = id,
+            date = date,
+            startTime = startTime,
+            username = username,
+            endTime = endTime,
+            clock = null,
+            employer = employer
+        )
+    }
+}
+
+@Serializable
+data class SimpleShift(
+    val id: Long = 0L,
+    @Serializable(with = LocalDateTimeSerializer::class)
+    var startTime: LocalDateTime,  // The date of the shift
+    @Serializable(with = LocalDateTimeSerializer::class)
+    var endTime: LocalDateTime
 )
 @Serializable
 data class ShiftDTO(
     @Serializable(with = DateSerializer::class)
     val date: LocalDate,           // The date of the shift
     @Serializable(with = LocalDateTimeSerializer::class)
-
-    val startTime: LocalDateTime,   // Start time of the shift
+    val startTime: LocalDateTime? = null,   // Start time of the shift
     @Serializable(with = LocalDateTimeSerializer::class)
-
-    val endTime: LocalDateTime,     // End time of the shift
+    val endTime: LocalDateTime? = null,     // End time of the shift
     val workerLimit: Int,           // Maximum number of employees who can pick the shift
-    val postedById: Long            // ID of the manager who is posting the shift
+    var postedById: Long = 1L,
+    var employerId: Long = 1L,
 )
 
 
