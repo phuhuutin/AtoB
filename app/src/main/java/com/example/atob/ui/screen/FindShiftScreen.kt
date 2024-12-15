@@ -79,7 +79,9 @@ enum class FindShiftStatus{
             Available -> {
                 val isSusscessful = findShiftViewModel.addShiftSuspend(shift)
                 if(isSusscessful)
-                    homeViewModel.loadShiftsSuspend() else TODO()
+                    homeViewModel.loadShiftsSuspend() else {
+                        //do nothing/
+                    }
 
             }
 
