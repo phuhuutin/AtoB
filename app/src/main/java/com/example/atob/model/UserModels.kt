@@ -8,14 +8,18 @@ data class User(
     val email: String,
     val payRate: Double,
     val role: String,
-  //  val pickedShifts: List<Shift>? = null, // Nullable list for shifts
+    val employer: Employer,
+    val attendancePoints: AttendancePoints? = null
+//  val pickedShifts: List<Shift>? = null, // Nullable list for shifts
    // val attendancePoints: AttendancePoints? = null // Nullable attendance points
 )
 
 @Serializable
 data class SignUpRequest(
     val username: String,
-    val password: String
+    val password: String,
+    val email: String,
+    val employerId: Long,
 )
 @Serializable
 data class LoginRequest(
@@ -23,8 +27,16 @@ data class LoginRequest(
     val password: String
 )
 
+
 @Serializable
-data class AttendancePoints(
-    val id: Long,
-    val points: Int // Add other fields as necessary
+data class ChangePasswordRequest(
+    var username: String,
+    var oldPassword: String,
+    var newPassword: String
+)
+
+@Serializable
+data class PayRateUpdateRequest(
+    val payRate: Double,
+    val userId: Long
 )
