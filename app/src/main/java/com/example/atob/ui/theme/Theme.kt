@@ -1,4 +1,4 @@
-package com.example.compose
+package com.example.atob.ui.theme
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
@@ -10,9 +10,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import com.example.ui.theme.AppTypography
 
-private val lightScheme = lightColorScheme(
+public val lightScheme = lightColorScheme(
     primary = primaryLight,
     onPrimary = onPrimaryLight,
     primaryContainer = primaryContainerLight,
@@ -256,7 +255,7 @@ val unspecified_scheme = ColorFamily(
 fun AtoBTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     // Dynamic color is available on Android 12+
-    dynamicColor: Boolean = true,
+    dynamicColor: Boolean = false,
     content: @Composable() () -> Unit
 ) {
   val colorScheme = when {
