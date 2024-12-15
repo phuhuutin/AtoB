@@ -1,127 +1,122 @@
 package com.example.atob.ui.screen
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.background
 
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRow
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
+import androidx.compose.foundation.layout.*
+
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
+
 import androidx.compose.ui.Modifier
+
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
-import com.example.atob.model.Shift
+
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.atob.model.ReportDTO
+import com.example.atob.ui.state.AuthViewUiState
+
+import com.example.atob.ui.viewModel.AddressViewModel
+import com.example.atob.ui.viewModel.AuthViewModel
 import com.example.atob.ui.viewModel.HomeViewModel
 
+import java.time.LocalDate
 
+import com.example.atob.ui.viewModel.FindShiftViewModel
+import com.example.atob.ui.viewModel.ReportViewModel
+
+
+enum class MarkColor(
+    val backgroundColor: @Composable () -> Color,
+    val textColor: @Composable () -> Color
+) {
+    PRIMARY(
+        backgroundColor = { MaterialTheme.colorScheme.primary },
+        textColor = { MaterialTheme.colorScheme.onPrimary }
+    ),
+    SECONDARY(
+        backgroundColor = { MaterialTheme.colorScheme.onTertiaryContainer },
+        textColor = { MaterialTheme.colorScheme.onSecondary }
+    ),
+    ERROR(
+        backgroundColor = { MaterialTheme.colorScheme.error },
+        textColor = { MaterialTheme.colorScheme.onError }
+    ),
+    NONE(
+        backgroundColor = { MaterialTheme.colorScheme.surface },
+        textColor = { MaterialTheme.colorScheme.onSurface }
+    )
+}
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(viewModel: HomeViewModel) {
-    var selectedTabIndex by remember { mutableStateOf(0) }
+fun HomeScreen(
+    homeViewModel: HomeViewModel = viewModel(factory = HomeViewModel.Factory),
+    modifier: Modifier = Modifier,
+    authViewModel: AuthViewModel = viewModel(factory = AuthViewModel.Factory),
+    findShiftViewModel: FindShiftViewModel = viewModel(factory = FindShiftViewModel.Factory),
+    reportViewModel: ReportViewModel = viewModel(factory = ReportViewModel.Factory)
+ ) {
+    var selectedTabIndex by rememberSaveable  { mutableIntStateOf(0) }
+    var selectedDate by rememberSaveable   { mutableStateOf<LocalDate?>(LocalDate.now()) }
+    val currentUser by remember { mutableStateOf((authViewModel.uiState.value as? AuthViewUiState.Success)?.userInfo) }
+    val onDateSelected: (LocalDate) -> Unit = {
+        selectedDate = it
+    }
+
+    LaunchedEffect(Unit) {
+        homeViewModel.loadShifts()
+    }
 
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Home") }
+                title = { Text("Home", color = MaterialTheme.colorScheme.primary) },
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = MaterialTheme.colorScheme.onPrimary)
             )
         }
     ) { innerPadding ->
         Column(modifier = Modifier.padding(innerPadding)) {
-            // Define the tabs
-            val tabTitles = listOf("My Schedule", "Find Shift")
-
-            // TabRow for switching between "My Schedule" and "Find Shift"
+            val tabTitles = listOf("My Schedule", "Find Shift", "Attendance")
             TabRow(
                 selectedTabIndex = selectedTabIndex,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                containerColor = MaterialTheme.colorScheme.onSurface
             ) {
                 tabTitles.forEachIndexed { index, title ->
                     Tab(
                         selected = selectedTabIndex == index,
                         onClick = { selectedTabIndex = index },
-                        text = { Text(title) }
+                        selectedContentColor = MaterialTheme.colorScheme.onPrimary,
+                        text = { Text(title, color = MaterialTheme.colorScheme.surface) }
                     )
                 }
             }
-
-            // Display content based on selected tab
             when (selectedTabIndex) {
-                0 -> MyScheduleScreen(viewModel)
-                1 -> FindShiftScreen(viewModel)
+                0 -> MyScheduleScreen(addressViewModel  = viewModel(factory = AddressViewModel.Factory), homeViewModel, authViewModel = authViewModel, modifier = modifier, selectedDate = selectedDate, onDateSelected = onDateSelected, reportViewModel = reportViewModel)
+                1 -> FindShiftScreen(findShiftViewModel = findShiftViewModel,
+                    modifier = modifier.background(MaterialTheme.colorScheme.onPrimaryContainer),
+                    authViewModel = authViewModel,
+                    homeViewModel = homeViewModel
+                )
+                2 -> AttendancePointsScreen(attendancePoints = currentUser?.attendancePoints!!)
             }
         }
     }
 }
 
 
+//@Preview(showBackground = true)
+//@Composable
+//fun MyHomeScreenPreview() {
+//    val authViewModel: AuthViewModel = viewModel(factory = AuthViewModel.Factory)
+//    val navController = rememberNavController()
+//    val uiState by authViewModel.uiState.collectAsState() // Collecting the UI state
+//    authViewModel.login("tinmene","123456")
+//    val homeViewModel: HomeViewModel = viewModel(factory = HomeViewModel.Factory)
+//    AtoBTheme {
+//        (uiState as AuthViewUiState.Success).userInfo?.let { HomeScreen(homeViewModel = homeViewModel) }
+//    }
+//
+//}
 
-@Composable
-fun FindShiftScreen(viewModel: HomeViewModel) {
-    // Display shifts that user can pick
 
-}
-
-@Composable
-fun MyScheduleScreen(viewModel: HomeViewModel) {
-    val uiState by viewModel.uiState.collectAsState()
-
-    // Using a Box to align content properly
-    Box(modifier = Modifier.fillMaxSize()) {
-        // Show loading indicator if data is loading
-        if (uiState.isLoading) {
-            CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-        } else {
-            uiState.errorMessage?.let { errorMessage ->
-                Text("Error: $errorMessage", color = Color.Red, modifier = Modifier.align(Alignment.Center))
-            }
-
-            // Displaying shifts in a LazyColumn
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp)
-            ) {
-                items(uiState.shifts) { shift ->
-                    ShiftItem(shift) // Assuming ShiftItem is another composable that displays shift details
-                }
-            }
-        }
-    }
-}
-@Composable
-fun ShiftItem(shift: Shift) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp) // Use CardDefaults.elevation
-
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp)
-        ) {
-            Text(text = "Shift Date: ${shift.date}")
-            Text(text = "Start Time: ${shift.startTime}")
-            Text(text = "End Time: ${shift.endTime}")
-            Text(text = "Posted By: ${shift.postedBy.username}")
-            Text(text = "Current Workers: ${shift.currentWorkers}/${shift.workerLimit}")
-        }
-    }
-}
