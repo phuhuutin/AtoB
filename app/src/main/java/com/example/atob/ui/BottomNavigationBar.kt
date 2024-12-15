@@ -15,14 +15,15 @@ import com.example.atob.ui.screen.Screen
 fun BottomNavigationBar(navController: NavController) {
     val items = listOf(
         Screen.Home,
+        Screen.Pay,
         Screen.Profile,
-        Screen.Settings
-    )
+        Screen.Report
+     )
 
     NavigationBar {
         items.forEach { screen ->
             NavigationBarItem(
-                icon = { Icon(Icons.Filled.Home, contentDescription = null) },
+                icon = { Icon(screen.icon, contentDescription = screen.route) },
                 label = { Text(stringResource(screen.resourceId)) },
                 selected = false, // Set true if current route matches screen.route
                 onClick = {
