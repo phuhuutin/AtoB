@@ -17,5 +17,7 @@ sealed class Screen(val route: String, @StringRes val resourceId: Int, val icon:
     object Profile : Screen("profile", R.string.profile, Icons.Filled.Person)
     object Login : Screen("login", R.string.login, Icons.Filled.Lock)
     object Report : Screen("report", R.string.report, Icons.Filled.Report)
+    object InitialSetup : Screen("initialSetup",R.string.setup, Icons.Filled.Report)
+
 
 }
