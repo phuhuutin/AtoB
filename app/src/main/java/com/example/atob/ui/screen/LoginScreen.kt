@@ -1,5 +1,6 @@
 package com.example.atob.ui.screen
 
+import androidx.compose.foundation.background
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 
@@ -11,6 +12,7 @@ import androidx.compose.material.icons.filled.VisibilityOff
 
 
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -19,7 +21,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -29,17 +30,33 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.example.atob.model.User
+import com.example.atob.ui.state.AuthViewUiState
 import com.example.atob.ui.viewModel.AuthViewModel
+import com.example.atob.ui.viewModel.FindShiftViewModel
+import com.example.atob.ui.viewModel.HomeViewModel
 import kotlinx.coroutines.launch
-import retrofit2.HttpException
 
 @Composable
-fun LoginScreen(navController: NavController, authViewModel: AuthViewModel) {
+fun LoginScreen(
+    navController: NavController,
+    authViewModel: AuthViewModel,
+    onLoginClick:  suspend (username: String, password: String) -> Unit
+) {
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
     val uiState by authViewModel.uiState.collectAsState()
+    val coroutineScope = rememberCoroutineScope()
+
+
+    if(uiState is AuthViewUiState.Loading){
+        Box(
+            modifier = Modifier.fillMaxSize().background( MaterialTheme.colorScheme.background),
+            contentAlignment = Alignment.Center,
+
+        ) {
+            CircularProgressIndicator()
+    }}
 
     Column(
         modifier = Modifier
@@ -93,25 +110,30 @@ fun LoginScreen(navController: NavController, authViewModel: AuthViewModel) {
         // Login Button
         Button(
             onClick = {
-                authViewModel.login(username, password)
-                },
+                coroutineScope.launch {
+                    if(username.isNotBlank() && password.isNotBlank())
+                        onLoginClick(username, password)
+
+                } },
             modifier = Modifier.fillMaxWidth()
         ) {
             Text("Login")
+        }
+        // new Employer setup
+        Button(
+            onClick = {
+                navController.navigate(Screen.InitialSetup.route)
+            },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Sign Up")
         }
 
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Display logged-in user details if available
-        uiState.userInfo?.let { user ->
-            Text("Logged in as: ${user.username}")
-            Text("Email: ${user.email}")
-            Text("Role: ${user.role}")
-        }
-
         // Display login message
-        uiState.loginError?.let {
+        (uiState as? AuthViewUiState.Error)?.message?.let {
             Text(
                 text = it,
                 color = MaterialTheme.colorScheme.error,
